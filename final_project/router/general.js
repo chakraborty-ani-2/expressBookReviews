@@ -4,31 +4,53 @@ let isValid = require("./auth_users.js").isValid;
 let users = require("./auth_users.js").users;
 const public_users = express.Router();
 
+// Check if a user with the given username already exists
+const doesExist = (username) => {
+    // Filter the users array for any user with the same username
+    let userswithsamename = users.filter((user) => {
+        return user.username === username;
+    });
+    // Return true if any user with the same username is found, otherwise false
+    if (userswithsamename.length > 0) {
+        return true;
+    } else {
+        return false;
+    }
+}
 
 public_users.post("/register", (req, res) => {
-    const username = req.body.username;
-    const password = req.body.password;
+    try {
+        const username = req.body.username;
+        const password = req.body.password;
 
-    // Check if both username and password are provided
-    if (username && password) {
-        // Check if the user does not already exist
-        if (!doesExist(username)) {
-            // Add the new user to the users array
-            users.push({ "username": username, "password": password });
-            return res.status(200).json({ message: "User successfully registered. Now you can login" });
-        } else {
-            return res.status(404).json({ message: "User already exists!" });
+        // Check if both username and password are provided
+        if (username && password) {
+            // Check if the user does not already exist
+            if (!doesExist(username)) {
+                // Add the new user to the users array
+                users.push({ "username": username, "password": password });
+                return res.status(200).json({ message: "User successfully registered. Now you can login" });
+            } else {
+                return res.status(404).json({ message: "User already exists!" });
+            }
         }
+        // Return error if username or password is missing
+        return res.status(404).json({ message: "Unable to register user." });
+    } catch (error) {
+        return res.status(500).json({
+            message: "error",
+            error: error.message
+        });
     }
-    // Return error if username or password is missing
-    return res.status(404).json({ message: "Unable to register user." });
+
 });
 
 // Get the book list available in the shop
 public_users.get('/', function (req, res) {
     try {
         return res.status(200).json({
-            message: "success",
+            success: true,
+            message: "All books fetched successfully!",
             data: books
         });
     } catch (error) {
@@ -45,8 +67,15 @@ public_users.get('/isbn/:isbn', function (req, res) {
     try {
         const requestedIsbn = req.params.isbn
         const book = books[requestedIsbn]
+
+        // Check if the book exists
+        if (!book) {
+            return res.status(404).json({ success: false, message: "Book not found." });
+        }
+
         return res.status(200).json({
-            message: "success",
+            success: true,
+            message: "Book fetched successfully!",
             data: book
         });
     } catch (error) {
@@ -68,7 +97,8 @@ public_users.get('/author/:author', function (req, res) {
             }
         }
         return res.status(200).json({
-            message: "success",
+            success: true,
+            message: "Books fetched successfully!",
             data: result
         });
     } catch (error) {
@@ -90,7 +120,8 @@ public_users.get('/title/:title', function (req, res) {
             }
         }
         return res.status(200).json({
-            message: "success",
+            success: true,
+            message: "Books fetched successfully!",
             data: result
         });
     } catch (error) {
@@ -105,9 +136,17 @@ public_users.get('/title/:title', function (req, res) {
 public_users.get('/review/:isbn', function (req, res) {
     try {
         const requestedIsbn = req.params.isbn
-        const reviews = books[requestedIsbn].reviews
+        const book = books[requestedIsbn]
+
+        // Check if the book exists
+        if (!book) {
+            return res.status(404).json({ success: false, message: "Book not found." });
+        }
+
+        const reviews = book.reviews
         return res.status(200).json({
-            message: "success",
+            success: true,
+            message: "Reviews fetched successfully!",
             data: reviews
         });
     } catch (error) {
