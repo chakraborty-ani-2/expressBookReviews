@@ -76,20 +76,21 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
 
         // Check if the user already has a review for this book
         const existingReview = Object.keys(books[requiredIsbn].reviews).find(user => user === username);
+        books[requiredIsbn].reviews[username] = review;
 
         if (existingReview) {
-            // Update the existing review
-            books[requiredIsbn].reviews[username] = review;
+            return res.status(200).json({
+                success: true,
+                message: "Review updated successfully.",
+                book: books[requiredIsbn]
+            });
         } else {
-            // Add a new review for the user
-            books[requiredIsbn].reviews[username] = review;
+            return res.status(200).json({
+                success: true,
+                message: "Review added successfully.",
+                book: books[requiredIsbn]
+            });
         }
-
-        return res.status(200).json({
-            success: true,
-            message: "Review added/updated successfully.",
-            book: books[requiredIsbn]
-        });
     } catch (error) {
         return res.status(500).json({
             message: "error",
