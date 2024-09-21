@@ -51,7 +51,8 @@ regd_users.post("/login", (req, res) => {
         }
     } catch (error) {
         return res.status(500).json({
-            message: "error",
+            success: false,
+            message: "Error Logging in!",
             error: error.message
         });
     }
@@ -93,14 +94,16 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
         }
     } catch (error) {
         return res.status(500).json({
-            message: "error",
+            success: false,
+            message: "Error adding/updating review!",
             error: error.message
         });
     }
 });
 
 regd_users.delete("/auth/review/:isbn", (req, res) => {
-    const requiredIsbn = req.params.isbn;
+    try {
+        const requiredIsbn = req.params.isbn;
     const username = req.session.authorization.username; // Get username from session
 
     // Ensure the user is logged in
@@ -126,6 +129,13 @@ regd_users.delete("/auth/review/:isbn", (req, res) => {
         message: "Review deleted successfully.",
         book: books[requiredIsbn]
     });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Error deleting review!",
+            error: error.message
+        });
+    }
 })
 
 module.exports.authenticated = regd_users;

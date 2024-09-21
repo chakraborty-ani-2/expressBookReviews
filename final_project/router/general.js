@@ -38,7 +38,8 @@ public_users.post("/register", (req, res) => {
         return res.status(404).json({ message: "Unable to register user." });
     } catch (error) {
         return res.status(500).json({
-            message: "error",
+            success: false,
+            message: "Error registering user!",
             error: error.message
         });
     }
@@ -46,32 +47,41 @@ public_users.post("/register", (req, res) => {
 });
 
 // Get the book list available in the shop
-public_users.get('/', function (req, res) {
+public_users.get('/', async (req, res) => {
     try {
+        const allBooks = await new Promise((resolve) => {
+            resolve(books); 
+        });
+
         return res.status(200).json({
             success: true,
             message: "All books fetched successfully!",
-            data: books
+            data: allBooks
         });
     } catch (error) {
         return res.status(500).json({
-            message: "error",
+            success: false,
+            message: "Error fetching books!",
             error: error.message
         });
     }
-
 });
 
 // Get book details based on ISBN
-public_users.get('/isbn/:isbn', function (req, res) {
-    try {
-        const requestedIsbn = req.params.isbn
-        const book = books[requestedIsbn]
+public_users.get('/isbn/:isbn', async (req, res) => {
+    const requestedIsbn = req.params.isbn;
 
-        // Check if the book exists
-        if (!book) {
-            return res.status(404).json({ success: false, message: "Book not found." });
-        }
+    try {
+        // Use a Promise to handle the fetching logic
+        const book = await new Promise((resolve, reject) => {
+            const foundBook = books[requestedIsbn];
+
+            if (!foundBook) {
+                reject({ status: 404, message: "Book not found." });
+            } else {
+                resolve(foundBook);
+            }
+        });
 
         return res.status(200).json({
             success: true,
@@ -79,23 +89,32 @@ public_users.get('/isbn/:isbn', function (req, res) {
             data: book
         });
     } catch (error) {
-        return res.status(500).json({
-            message: "error",
+        return res.status(error.status || 500).json({
+            success: false,
+            message: "Error fetching book!",
             error: error.message
         });
     }
 });
+
 
 // Get book details based on author
-public_users.get('/author/:author', function (req, res) {
+public_users.get('/author/:author', async (req, res) => {
+    const requestedAuthor = req.params.author;
+
     try {
-        const requestedAuthor = req.params.author
-        const result = [];
-        for (const key in books) {
-            if (books[key].author.toLowerCase() === requestedAuthor.toLowerCase()) {
-                result.push(books[key]);
+        const result = await new Promise((resolve) => {
+            const matchedBooks = [];
+
+            for (const key in books) {
+                if (books[key].author.toLowerCase() === requestedAuthor.toLowerCase()) {
+                    matchedBooks.push(books[key]);
+                }
             }
-        }
+
+            resolve(matchedBooks);
+        });
+
         return res.status(200).json({
             success: true,
             message: "Books fetched successfully!",
@@ -103,22 +122,31 @@ public_users.get('/author/:author', function (req, res) {
         });
     } catch (error) {
         return res.status(500).json({
-            message: "error",
+            success: false,
+            message: "Error fetching books!",
             error: error.message
         });
     }
 });
 
+
 // Get all books based on title
-public_users.get('/title/:title', function (req, res) {
+public_users.get('/title/:title', async (req, res) => {
+    const requestedTitle = req.params.title;
+
     try {
-        const requestedTitle = req.params.title
-        const result = [];
-        for (const key in books) {
-            if (books[key].title.toLowerCase() === requestedTitle.toLowerCase()) {
-                result.push(books[key]);
+        const result = await new Promise((resolve) => {
+            const matchedBooks = [];
+
+            for (const key in books) {
+                if (books[key].title.toLowerCase() === requestedTitle.toLowerCase()) {
+                    matchedBooks.push(books[key]);
+                }
             }
-        }
+
+            resolve(matchedBooks);
+        });
+
         return res.status(200).json({
             success: true,
             message: "Books fetched successfully!",
@@ -126,11 +154,13 @@ public_users.get('/title/:title', function (req, res) {
         });
     } catch (error) {
         return res.status(500).json({
-            message: "error",
+            success: false,
+            message: "Error fetching books!",
             error: error.message
         });
     }
 });
+
 
 //  Get book review
 public_users.get('/review/:isbn', function (req, res) {
@@ -151,7 +181,8 @@ public_users.get('/review/:isbn', function (req, res) {
         });
     } catch (error) {
         return res.status(500).json({
-            message: "error",
+            success: false,
+            message: "Error fetching reviews!",
             error: error.message
         });
     }
